@@ -18,6 +18,7 @@ from apps.authentication.models import Email
 from apps.authentication.models import OnlineUser as User
 from apps.inventory.models import Item
 from apps.payment.models import PaymentTransaction
+from apps.profiles.models import Privacy
 from apps.shop.forms import SetRFIDForm
 from apps.shop.models import MagicToken, OrderLine
 from apps.shop.serializers import (ItemSerializer, OrderLineSerializer, TransactionSerializer,
@@ -67,6 +68,15 @@ class UserOrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.Re
     def get_queryset(self):
         return OrderLine.objects.filter(user=self.request.user)
 
+class LeaderboardViewSet(viewsets.ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    def list(self, request, format=None):
+        privacies = Privacy.object.filter(visible_in_leaderboard=True)
+        users_ids = [privacy.user.id for privacy in privacies]
+        orders = OrderLine.objects.filter(user__in=users_ids)
+        serializer = PrivacySerializer(privacy)
+        return Response(serializer.data)
 
 class UserViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, APIView):
     queryset = User.objects.all()

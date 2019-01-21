@@ -92,3 +92,6 @@ class UserOrderLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderLine
         fields = ('orders', 'paid', 'datetime')
+
+class LeaderboardSerializer(serializers.Serializer):
+    pass
