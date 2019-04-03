@@ -397,8 +397,6 @@ class AttendanceEventViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
 class AttendeeViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     serializer_class = AttendeeSerializer
     authentication_classes = [OidcOauth2Auth]
-    #permission_classes = [TokenHasScope]
-    #required_scopes = ['regme.readwrite']
     filter_fields = ('event', 'attended',)
 
     @staticmethod
@@ -425,9 +423,7 @@ class CompanyEventViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mi
 
 class AttendViewSet(views.APIView):
     authentication_classes = [OidcOauth2Auth]
-    #permission_classes = [TokenHasScope]
-    #required_scopes = ['regme.readwrite']
-
+    
     @staticmethod
     def _validate_attend_params(rfid, username):
         logger = logging.getLogger(__name__)
