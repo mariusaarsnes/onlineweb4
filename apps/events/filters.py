@@ -10,16 +10,16 @@ class BaseNumberInFilter(BaseInFilter, NumberFilter):
 
 
 class EventDateFilter(django_filters.FilterSet):
-    event_start__gte = django_filters.DateTimeFilter(field_name='event_start', lookup_expr='gte')
-    event_start__lte = django_filters.DateTimeFilter(field_name='event_start', lookup_expr='lte')
-    event_end__gte = django_filters.DateTimeFilter(field_name='event_end', lookup_expr='gte')
-    event_end__lte = django_filters.DateTimeFilter(field_name='event_end', lookup_expr='lte')
-    attendance_event__isnull = django_filters.BooleanFilter(field_name='attendance_event', lookup_expr='isnull')
-    is_attendee = django_filters.BooleanFilter(field_name='attendance_event', method='filter_is_attendee')
-    can_change = django_filters.BooleanFilter(method='filter_can_change')
-    can_attend = django_filters.BooleanFilter(method='filter_can_attend')
-    event_type = BaseNumberInFilter(field_name='event_type', lookup_expr='in')
-    companies = BaseNumberInFilter(field_name='companies', lookup_expr='company__in')
+    event_start__gte = django_filters.DateTimeFilter(field_name="event_start", lookup_expr="gte")
+    event_start__lte = django_filters.DateTimeFilter(field_name="event_start", lookup_expr="lte")
+    event_end__gte = django_filters.DateTimeFilter(field_name="event_end", lookup_expr="gte")
+    event_end__lte = django_filters.DateTimeFilter(field_name="event_end", lookup_expr="lte")
+    attendance_event__isnull = django_filters.BooleanFilter(field_name="attendance_event", lookup_expr="isnull")
+    is_attendee = django_filters.BooleanFilter(field_name="attendance_event", method="filter_is_attendee")
+    can_change = django_filters.BooleanFilter(method="filter_can_change")
+    can_attend = django_filters.BooleanFilter(method="filter_can_attend")
+    event_type = BaseNumberInFilter(field_name="event_type", lookup_expr="in")
+    companies = BaseNumberInFilter(field_name="companies", lookup_expr="company__in")
 
     def filter_can_attend(self, queryset, name, value):
         """
@@ -36,7 +36,7 @@ class EventDateFilter(django_filters.FilterSet):
             user_attendable_event_pks = []
             for event in events_with_attendance:
                 response = event.attendance_event.rules_satisfied(self.request.user)
-                can_attend = response.get('status', None)
+                can_attend = response.get("status", None)
                 if can_attend:
                     user_attendable_event_pks.append(event.id)
 
@@ -78,21 +78,16 @@ class EventDateFilter(django_filters.FilterSet):
         if user.is_superuser:
             return queryset
 
-        allowed_events = get_objects_for_user(
-            user,
-            'events.change_event',
-            accept_global_perms=False,
-            klass=queryset
-        )
+        allowed_events = get_objects_for_user(user, "events.change_event", accept_global_perms=False, klass=queryset)
         return allowed_events
 
     class Meta:
         model = Event
-        fields = ('event_start', 'event_end', 'event_type', 'is_attendee')
+        fields = ("event_start", "event_end", "event_type", "is_attendee")
 
 
 class AttendanceEventFilter(django_filters.FilterSet):
-    has_extras = django_filters.BooleanFilter(method='filter_has_extras')
+    has_extras = django_filters.BooleanFilter(method="filter_has_extras")
 
     def filter_has_extras(self, queryset, name, value):
         if value:
@@ -102,4 +97,4 @@ class AttendanceEventFilter(django_filters.FilterSet):
 
     class Meta:
         model = AttendanceEvent
-        fields = ('has_extras',)
+        fields = ("has_extras",)

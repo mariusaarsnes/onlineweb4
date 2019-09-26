@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+
 # API v1
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import mixins, permissions, status, views, viewsets
@@ -27,14 +28,23 @@ from apps.events.filters import AttendanceEventFilter, EventDateFilter
 from apps.events.forms import CaptchaForm
 from apps.events.models import AttendanceEvent, Attendee, CompanyEvent, Event
 from apps.events.pdf_generator import EventPDF
-from apps.events.serializers import (AttendanceEventSerializer,
-                                     AttendeeRegistrationCreateSerializer,
-                                     AttendeeRegistrationReadOnlySerializer,
-                                     AttendeeRegistrationUpdateSerializer, AttendeeSerializer,
-                                     CompanyEventSerializer, EventSerializer,
-                                     UserAttendanceEventSerializer)
-from apps.events.utils import (handle_attend_event_payment, handle_attendance_event_detail,
-                               handle_event_ajax, handle_event_payment, handle_mail_participants)
+from apps.events.serializers import (
+    AttendanceEventSerializer,
+    AttendeeRegistrationCreateSerializer,
+    AttendeeRegistrationReadOnlySerializer,
+    AttendeeRegistrationUpdateSerializer,
+    AttendeeSerializer,
+    CompanyEventSerializer,
+    EventSerializer,
+    UserAttendanceEventSerializer,
+)
+from apps.events.utils import (
+    handle_attend_event_payment,
+    handle_attendance_event_detail,
+    handle_event_ajax,
+    handle_event_payment,
+    handle_mail_participants,
+)
 from apps.online_oidc_provider.authentication import OidcOauth2Auth
 from apps.payment.models import Payment, PaymentDelay, PaymentRelation
 
@@ -45,10 +55,11 @@ def index(request):
     context = {}
     if request.user and request.user.is_authenticated:
         signer = Signer()
-        context['signer_value'] = signer.sign(request.user.username)
-        context['personal_ics_path'] = request.build_absolute_uri(
-            reverse('events_personal_ics', args=(context['signer_value'],)))
-    return render(request, 'events/index.html', context)
+        context["signer_value"] = signer.sign(request.user.username)
+        context["personal_ics_path"] = request.build_absolute_uri(
+            reverse("events_personal_ics", args=(context["signer_value"],))
+        )
+    return render(request, "events/index.html", context)
 
 
 def details(request, event_id, event_slug):
@@ -59,31 +70,33 @@ def details(request, event_id, event_slug):
         messages.error(request, "Du har ikke tilgang til dette arrangementet.")
         return index(request)
 
-    if request.method == 'POST':
-        if request.is_ajax and 'action' in request.POST and 'extras_id' in request.POST:
-            return JsonResponse(handle_event_ajax(event, request.user,
-                                                  request.POST['action'], request.POST['extras_id']))
+    if request.method == "POST":
+        if request.is_ajax and "action" in request.POST and "extras_id" in request.POST:
+            return JsonResponse(
+                handle_event_ajax(event, request.user, request.POST["action"], request.POST["extras_id"])
+            )
 
     form = CaptchaForm(user=request.user)
     context = {
-        'captcha_form': form,
-        'event': event,
-        'ics_path': request.build_absolute_uri(reverse('event_ics', args=(event.id,))),
+        "captcha_form": form,
+        "event": event,
+        "ics_path": request.build_absolute_uri(reverse("event_ics", args=(event.id,))),
     }
 
     if event.is_attendance_event():
         try:
-            payment = Payment.objects.get(content_type=ContentType.objects.get_for_model(AttendanceEvent),
-                                          object_id=event_id)
+            payment = Payment.objects.get(
+                content_type=ContentType.objects.get_for_model(AttendanceEvent), object_id=event_id
+            )
         except Payment.DoesNotExist:
             payment = None
 
         context = handle_attendance_event_detail(event, request.user, context)
         if payment:
-            request.session['payment_id'] = payment.id
+            request.session["payment_id"] = payment.id
             context = handle_event_payment(event, request.user, payment, context)
 
-    return render(request, 'events/details.html', context)
+    return render(request, "events/details.html", context)
 
 
 def get_attendee(attendee_id):
@@ -99,7 +112,7 @@ def attendEvent(request, event_id):
         return redirect(event)
 
     if not request.POST:
-        messages.error(request, _('Vennligst fyll ut skjemaet.'))
+        messages.error(request, _("Vennligst fyll ut skjemaet."))
         return redirect(event)
 
     form = CaptchaForm(request.POST, user=request.user)
@@ -117,10 +130,10 @@ def attendEvent(request, event_id):
 
     response = event.attendance_event.is_eligible_for_signup(request.user)
 
-    if response['status']:
+    if response["status"]:
         attendee = Attendee(event=attendance_event, user=request.user)
-        if 'note' in form.cleaned_data:
-            attendee.note = form.cleaned_data['note']
+        if "note" in form.cleaned_data:
+            attendee.note = form.cleaned_data["note"]
         attendee.show_as_attending_event = request.user.get_visible_as_attending_events()
         attendee.save()
         messages.success(request, _("Du er nå meldt på arrangementet."))
@@ -130,7 +143,7 @@ def attendEvent(request, event_id):
 
         return redirect(event)
     else:
-        messages.error(request, response['message'])
+        messages.error(request, response["message"])
         return redirect(event)
 
 
@@ -159,8 +172,9 @@ def unattendEvent(request, event_id):
         return redirect(event)
 
     try:
-        payment = Payment.objects.get(content_type=ContentType.objects.get_for_model(AttendanceEvent),
-                                      object_id=event_id)
+        payment = Payment.objects.get(
+            content_type=ContentType.objects.get_for_model(AttendanceEvent), object_id=event_id
+        )
     except Payment.DoesNotExist:
         payment = None
 
@@ -171,7 +185,7 @@ def unattendEvent(request, event_id):
 
         # Return if someone is trying to unatend without refunding
         if payments:
-            messages.error(request, _('Du har betalt for arrangementet og må refundere før du kan melde deg av'))
+            messages.error(request, _("Du har betalt for arrangementet og må refundere før du kan melde deg av"))
             return redirect(event)
 
         delays = PaymentDelay.objects.filter(payment=payment, user=request.user)
@@ -185,33 +199,37 @@ def unattendEvent(request, event_id):
 
 
 def search_events(request):
-    query = request.GET.get('query')
-    filters = {
-        'future': request.GET.get('future'),
-        'myevents': request.GET.get('myevents')
-    }
+    query = request.GET.get("query")
+    filters = {"future": request.GET.get("future"), "myevents": request.GET.get("myevents")}
     events = _search_indexed(request, query, filters)
 
-    return render(request, 'events/search.html', {'events': events})
+    return render(request, "events/search.html", {"events": events})
 
 
 def _search_indexed(request, query, filters):
     results = []
     kwargs = {}
-    order_by = 'event_start'
+    order_by = "event_start"
 
-    if filters['future'] == 'true':
-        kwargs['event_start__gte'] = timezone.now()
+    if filters["future"] == "true":
+        kwargs["event_start__gte"] = timezone.now()
     else:
         # Reverse order when showing all events
-        order_by = '-' + order_by
+        order_by = "-" + order_by
 
-    if filters['myevents'] == 'true':
-        kwargs['attendance_event__attendees__user'] = request.user
+    if filters["myevents"] == "true":
+        kwargs["attendance_event__attendees__user"] = request.user
 
-    events = Event.objects.filter(**kwargs).order_by(order_by).prefetch_related(
-        'attendance_event', 'attendance_event__attendees', 'attendance_event__reserved_seats',
-        'attendance_event__reserved_seats__reservees')
+    events = (
+        Event.objects.filter(**kwargs)
+        .order_by(order_by)
+        .prefetch_related(
+            "attendance_event",
+            "attendance_event__attendees",
+            "attendance_event__reserved_seats",
+            "attendance_event__reserved_seats__reservees",
+        )
+    )
 
     # Filters events that are restricted
     display_events = set()
@@ -231,7 +249,7 @@ def _search_indexed(request, query, filters):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Komiteer').count() == 1)
+@user_passes_test(lambda u: u.groups.filter(name="Komiteer").count() == 1)
 def generate_pdf(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
     # If this is not an attendance event, redirect to event with error
@@ -239,15 +257,15 @@ def generate_pdf(request, event_id):
         messages.error(request, _("Dette er ikke et påmeldingsarrangement."))
         return redirect(event)
 
-    if request.user.has_perm('events.change_event', obj=event):
+    if request.user.has_perm("events.change_event", obj=event):
         return EventPDF(event).render_pdf()
 
-    messages.error(request, _('Du har ikke tilgang til listen for dette arrangementet.'))
+    messages.error(request, _("Du har ikke tilgang til listen for dette arrangementet."))
     return redirect(event)
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Komiteer').count() == 1)
+@user_passes_test(lambda u: u.groups.filter(name="Komiteer").count() == 1)
 def generate_json(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
     # If this is not an attendance event, redirect to event with error
@@ -256,8 +274,8 @@ def generate_json(request, event_id):
         return redirect(event)
 
     # Check access
-    if not request.user.has_perm('events.change_event', obj=event):
-        messages.error(request, _('Du har ikke tilgang til listen for dette arrangementet.'))
+    if not request.user.has_perm("events.change_event", obj=event):
+        messages.error(request, _("Du har ikke tilgang til listen for dette arrangementet."))
         return redirect(event)
 
     attendee_unsorted = event.attendance_event.attending_attendees_qs
@@ -267,36 +285,33 @@ def generate_json(request, event_id):
     # Goes though attendance, the waitlist and reservations, and adds them to a json file.
     attendees = []
     for a in attendee_sorted:
-        attendees.append({
-            "first_name": a.user.first_name,
-            "last_name": a.user.last_name,
-            "year": a.user.year,
-            "phone_number": a.user.phone_number,
-            "allergies": a.user.allergies
-        })
+        attendees.append(
+            {
+                "first_name": a.user.first_name,
+                "last_name": a.user.last_name,
+                "year": a.user.year,
+                "phone_number": a.user.phone_number,
+                "allergies": a.user.allergies,
+            }
+        )
     waitlist = []
     for w in waiters:
-        waitlist.append({
-            "first_name": w.user.first_name,
-            "last_name": w.user.last_name,
-            "year": w.user.year,
-            "phone_number": w.user.phone_number
-        })
+        waitlist.append(
+            {
+                "first_name": w.user.first_name,
+                "last_name": w.user.last_name,
+                "year": w.user.year,
+                "phone_number": w.user.phone_number,
+            }
+        )
 
     reservees = []
     for r in reserve:
-        reservees.append({
-            "name": r.name,
-            "note": r.note
-        })
+        reservees.append({"name": r.name, "note": r.note})
 
-    response = HttpResponse(content_type='application/json')
-    response['Content-Disposition'] = 'attachment; filename="' + str(event.id) + '.json"'
-    response.write(json.dumps({
-        'Attendees': attendees,
-        'Waitlist': waitlist,
-        'Reservations': reservees
-    }))
+    response = HttpResponse(content_type="application/json")
+    response["Content-Disposition"] = 'attachment; filename="' + str(event.id) + '.json"'
+    response.write(json.dumps({"Attendees": attendees, "Waitlist": waitlist, "Reservations": reservees}))
 
     return response
 
@@ -325,39 +340,45 @@ def mail_participants(request, event_id):
         return redirect(event)
 
     # Check access
-    if not request.user.has_perm('events.change_event', obj=event):
-        messages.error(request, _('Du har ikke tilgang til å vise denne siden.'))
+    if not request.user.has_perm("events.change_event", obj=event):
+        messages.error(request, _("Du har ikke tilgang til å vise denne siden."))
         return redirect(event)
 
     all_attendees = list(event.attendance_event.attending_attendees_qs)
     attendees_on_waitlist = list(event.attendance_event.waitlist_qs)
     attendees_not_paid = list(event.attendance_event.attendees_not_paid)
 
-    if request.method == 'POST':
-        subject = request.POST.get('subject')
-        message = request.POST.get('message')
-        images = [(image.name, image.read(), image.content_type) for image in request.FILES.getlist('image')]
+    if request.method == "POST":
+        subject = request.POST.get("subject")
+        message = request.POST.get("message")
+        images = [(image.name, image.read(), image.content_type) for image in request.FILES.getlist("image")]
         mail_sent = handle_mail_participants(
             event,
-            request.POST.get('from_email'),
-            request.POST.get('to_email'),
+            request.POST.get("from_email"),
+            request.POST.get("to_email"),
             subject,
             message,
             images,
             all_attendees,
             attendees_on_waitlist,
-            attendees_not_paid
+            attendees_not_paid,
         )
 
         if mail_sent:
-            messages.success(request, _('Mailen ble sendt'))
+            messages.success(request, _("Mailen ble sendt"))
         else:
-            messages.error(request, _('Vi klarte ikke å sende mailene dine. Prøv igjen'))
+            messages.error(request, _("Vi klarte ikke å sende mailene dine. Prøv igjen"))
 
-    return render(request, 'events/mail_participants.html', {
-        'all_attendees': all_attendees, 'attendees_on_waitlist': attendees_on_waitlist,
-        'attendees_not_paid': attendees_not_paid, 'event': event
-    })
+    return render(
+        request,
+        "events/mail_participants.html",
+        {
+            "all_attendees": all_attendees,
+            "attendees_on_waitlist": attendees_on_waitlist,
+            "attendees_not_paid": attendees_not_paid,
+            "event": event,
+        },
+    )
 
 
 @login_required
@@ -371,7 +392,7 @@ def toggleShowAsAttending(request, event_id):
     attendance_event = event.attendance_event
     attendee = Attendee.objects.get(event=attendance_event, user=request.user)
 
-    if (attendee.show_as_attending_event):
+    if attendee.show_as_attending_event:
         attendee.show_as_attending_event = False
         messages.success(request, _("Du er ikke lenger synlig som påmeldt dette arrangementet."))
     else:
@@ -386,9 +407,9 @@ class EventViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Li
     serializer_class = EventSerializer
     permission_classes = (AllowAny,)
     filterset_class = EventDateFilter
-    filterset_fields = ('event_start', 'event_end', 'id',)
-    ordering_fields = ('event_start', 'event_end', 'id', 'is_today', 'registration_filtered')
-    ordering = ('-is_today', 'registration_filtered', 'id')
+    filterset_fields = ("event_start", "event_end", "id")
+    ordering_fields = ("event_start", "event_end", "id", "is_today", "registration_filtered")
+    ordering = ("-is_today", "registration_filtered", "id")
 
     def get_queryset(self):
         """
@@ -396,9 +417,9 @@ class EventViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Li
             event is visible AND (event has NO group restriction OR user having access to restricted event)
         """
         return Event.by_registration.filter(
-            (Q(group_restriction__isnull=True) | Q(group_restriction__groups__in=self.request.user.groups.all())) &
-            Q(visible=True)). \
-            distinct()
+            (Q(group_restriction__isnull=True) | Q(group_restriction__groups__in=self.request.user.groups.all()))
+            & Q(visible=True)
+        ).distinct()
 
 
 class RegistrationAttendaceEventViewSet(viewsets.ReadOnlyModelViewSet):
@@ -416,17 +437,17 @@ class AttendanceEventViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
 
 class RegistrationAttendeeViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    filterset_fields = ('event', 'attended',)
+    filterset_fields = ("event", "attended")
 
     def get_queryset(self):
         return Attendee.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return AttendeeRegistrationCreateSerializer
-        if self.action in ['update', 'partial_update']:
+        if self.action in ["update", "partial_update"]:
             return AttendeeRegistrationUpdateSerializer
-        if self.action in ['list', 'retrieve']:
+        if self.action in ["list", "retrieve"]:
             return AttendeeRegistrationReadOnlySerializer
 
         return super().get_serializer_class()
@@ -438,19 +459,22 @@ class RegistrationAttendeeViewSet(viewsets.ModelViewSet):
 
         # User can only be unattended before the deadline, or if they are on the wait list.
         if timezone.now() > attendance_event.unattend_deadline and not attendance_event.is_on_waitlist(user):
-            return Response({
-                'message': 'Avmeldingsfristen har gått ut, det er ikke lenger mulig å melde seg av arrangementet.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Avmeldingsfristen har gått ut, det er ikke lenger mulig å melde seg av arrangementet."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if attendance_event.event.event_start < timezone.now():
-            return Response({
-                'message': 'Du kan ikke melde deg av et arrangement som allerde har startet.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Du kan ikke melde deg av et arrangement som allerde har startet."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if attendee.has_paid:
-            return Response({
-                'message': 'Du må refundere betalingene dine før du kan melde deg av.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Du må refundere betalingene dine før du kan melde deg av."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Attendees un-attend with themselves as the admin user
         attendee.unattend(user)
@@ -461,17 +485,13 @@ class RegistrationAttendeeViewSet(viewsets.ModelViewSet):
 class AttendeeViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     serializer_class = AttendeeSerializer
     authentication_classes = [OidcOauth2Auth]
-    filterset_fields = ('event', 'attended',)
+    filterset_fields = ("event", "attended")
 
     @staticmethod
     def _get_allowed_attendees(user):
         if user.is_superuser:
             return Attendee.objects.all()
-        allowed_events = get_objects_for_user(
-            user,
-            'events.change_event',
-            accept_global_perms=False
-        )
+        allowed_events = get_objects_for_user(user, "events.change_event", accept_global_perms=False)
         attendance_events = AttendanceEvent.objects.filter(event__in=allowed_events)
         return Attendee.objects.filter(event__in=attendance_events)
 
@@ -493,10 +513,7 @@ class AttendViewSet(views.APIView):
         logger = logging.getLogger(__name__)
 
         if not (username or rfid):
-            return {
-                'message': 'Mangler både RFID og brukernavn. Vennligst prøv igjen.',
-                'attend_status': 41,
-            }
+            return {"message": "Mangler både RFID og brukernavn. Vennligst prøv igjen.", "attend_status": 41}
 
         # If attendee has typed in username to bind a new card to their user
         if username is not None and rfid is not None:
@@ -504,25 +521,22 @@ class AttendViewSet(views.APIView):
                 user = User.objects.get(username=username)
                 user.rfid = rfid
                 user.save()
-                logger.debug('Storing new RFID to user "%s"' % user, extra={
-                    'user': user.pk,
-                    'rfid': rfid,
-                })
+                logger.debug('Storing new RFID to user "%s"' % user, extra={"user": user.pk, "rfid": rfid})
             except User.DoesNotExist:
                 return {
-                    'message': 'Brukernavnet finnes ikke. Husk at det er et online.ntnu.no brukernavn! '
-                               '(Prøv igjen, eller scan nytt kort for å avbryte.)',
-                    'attend_status': 50,
+                    "message": "Brukernavnet finnes ikke. Husk at det er et online.ntnu.no brukernavn! "
+                    "(Prøv igjen, eller scan nytt kort for å avbryte.)",
+                    "attend_status": 50,
                 }
             except (IntegrityError, ValidationError):
-                logger.error('Could not store RFID information for username "{}" with RFID "{}".'.format(
-                    username, rfid,
-                ))
+                logger.error(
+                    'Could not store RFID information for username "{}" with RFID "{}".'.format(username, rfid)
+                )
                 return {
-                    'message': 'Det oppstod en feil da vi prøvde å lagre informasjonen. Vennligst prøv igjen. '
-                               'Dersom problemet vedvarer, ta kontakt med dotkom. '
-                               'Personen kan registreres med brukernavn i steden for RFID.',
-                    'attend_status': 51,
+                    "message": "Det oppstod en feil da vi prøvde å lagre informasjonen. Vennligst prøv igjen. "
+                    "Dersom problemet vedvarer, ta kontakt med dotkom. "
+                    "Personen kan registreres med brukernavn i steden for RFID.",
+                    "attend_status": 51,
                 }
 
         return {}
@@ -531,82 +545,89 @@ class AttendViewSet(views.APIView):
     def _authorize_user(user, event_id):
         try:
             if not user.is_authenticated:
-                return Response({
-                    'message': 'Administerende bruker må være logget inn for å registrere oppmøte',
-                    'attend_status': 60
-                    }, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {
+                        "message": "Administerende bruker må være logget inn for å registrere oppmøte",
+                        "attend_status": 60,
+                    },
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
             if not event_id:
-                return Response({
-                    'message': 'Arrangementets id er ikke oppgitt',
-                    'attend_status': 42
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Arrangementets id er ikke oppgitt", "attend_status": 42},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             event_object = Event.objects.get(pk=event_id)
-            if not user.has_perm('events.change_event', event_object):
-                return Response({
-                    'message': 'Administerende bruker har ikke rettigheter til å registrere oppmøte '
-                               'på dette arrangementet',
-                    'attend_status': 61
-                    }, status=status.HTTP_403_FORBIDDEN)
+            if not user.has_perm("events.change_event", event_object):
+                return Response(
+                    {
+                        "message": "Administerende bruker har ikke rettigheter til å registrere oppmøte "
+                        "på dette arrangementet",
+                        "attend_status": 61,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
         except Event.DoesNotExist:
-            return Response({
-                'message': 'Det gitte arrangementet eksisterer ikke',
-                'attend_status': 62
-                }, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Det gitte arrangementet eksisterer ikke", "attend_status": 62},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         return False
 
     def post(self, request, format=None):
         logger = logging.getLogger(__name__)
 
-        rfid = request.data.get('rfid')
-        event = request.data.get('event')
-        username = request.data.get('username')
-        waitlist_approved = request.data.get('approved')
+        rfid = request.data.get("rfid")
+        event = request.data.get("event")
+        username = request.data.get("username")
+        waitlist_approved = request.data.get("approved")
 
         auth_error = self._authorize_user(request.user, event)
         if auth_error:
             return auth_error
 
         error = self._validate_attend_params(rfid, username)
-        if 'message' in error and 'attend_status' in error:
-            return Response({'message': error.get('message'), 'attend_status': error.get('attend_status')},
-                            status=status.HTTP_400_BAD_REQUEST
-                            )
+        if "message" in error and "attend_status" in error:
+            return Response(
+                {"message": error.get("message"), "attend_status": error.get("attend_status")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             # If attendee is trying to attend by username
             if not rfid:
-                logger.debug('Retrieving attendee by username', extra={
-                    'event': event,
-                    'username': username,
-                    'rfid': rfid,
-                })
+                logger.debug(
+                    "Retrieving attendee by username", extra={"event": event, "username": username, "rfid": rfid}
+                )
                 attendee = Attendee.objects.get(event=event, user__username=username)
             else:
-                logger.debug('Retrieving attendee by rfid', extra={
-                    'event': event,
-                    'username': username,
-                    'rfid': rfid,
-                })
+                logger.debug("Retrieving attendee by rfid", extra={"event": event, "username": username, "rfid": rfid})
                 attendee = Attendee.objects.get(event=event, user__rfid=rfid)
 
             # If attendee is already marked as attended
             if attendee.attended:
-                logger.debug('Attendee already marked as attended.', extra={
-                    'user': attendee.user.id,
-                    'event': event,
-                })
-                return Response({'message': (attendee.user.get_full_name() +
-                                             ' har allerede registrert oppmøte.'), 'attend_status': 20},
-                                status=status.HTTP_400_BAD_REQUEST)
+                logger.debug("Attendee already marked as attended.", extra={"user": attendee.user.id, "event": event})
+                return Response(
+                    {
+                        "message": (attendee.user.get_full_name() + " har allerede registrert oppmøte."),
+                        "attend_status": 20,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # If attendee is on waitlist (bypassed if attendee has gotten the all-clear)
             if attendee.is_on_waitlist() and not waitlist_approved:
-                return Response({'message': (attendee.user.get_full_name() +
-                                             ' er på venteliste. Registrer dem som møtt opp allikevel?'),
-                                 'attend_status': 30},
-                                status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {
+                        "message": (
+                            attendee.user.get_full_name() + " er på venteliste. Registrer dem som møtt opp allikevel?"
+                        ),
+                        "attend_status": 30,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
             # All is clear, set attendee to attended and save
             attendee.attended = True
@@ -616,20 +637,36 @@ class AttendViewSet(views.APIView):
 
             # If attendee tried to attend by a username that isn't tied to a user
             if rfid is None:
-                return Response({'message': 'Brukernavnet finnes ikke. Husk at det er et online.ntnu.no brukernavn! '
-                                            '(Prøv igjen, eller scan nytt kort for å avbryte.)', 'attend_status': 50},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {
+                        "message": "Brukernavnet finnes ikke. Husk at det er et online.ntnu.no brukernavn! "
+                        "(Prøv igjen, eller scan nytt kort for å avbryte.)",
+                        "attend_status": 50,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # If attendee tried to attend by card, but card isn't tied to a user
             else:
-                return Response({'message': 'Kortet finnes ikke i databasen. '
-                                            'Skriv inn et online.ntnu.no brukernavn for å '
-                                            'knytte kortet til brukeren og registrere oppmøte.',
-                                 'attend_status': 40}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {
+                        "message": "Kortet finnes ikke i databasen. "
+                        "Skriv inn et online.ntnu.no brukernavn for å "
+                        "knytte kortet til brukeren og registrere oppmøte.",
+                        "attend_status": 40,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # All is clear, attendee is attended
-        return Response({'message': (attendee.user.get_full_name() + ' er registrert som deltaker. Velkommen!'),
-                         'attend_status': 10, 'attendee': attendee.id}, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "message": (attendee.user.get_full_name() + " er registrert som deltaker. Velkommen!"),
+                "attend_status": 10,
+                "attendee": attendee.id,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     @staticmethod
     def get_extra_actions():

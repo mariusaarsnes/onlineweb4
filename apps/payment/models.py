@@ -25,19 +25,10 @@ logger = logging.getLogger(__name__)
 
 class Payment(models.Model):
 
-    TYPE_CHOICES = (
-        (1, _('Umiddelbar')),
-        (2, _('Frist')),
-        (3, _('Utsettelse')),
-    )
+    TYPE_CHOICES = ((1, _("Umiddelbar")), (2, _("Frist")), (3, _("Utsettelse")))
 
     # Make sure these exist in settings if they are to be used.
-    STRIPE_KEY_CHOICES = (
-        ('arrkom', 'arrkom'),
-        ('prokom', 'prokom'),
-        ('trikom', 'trikom'),
-        ('fagkom', 'fagkom'),
-    )
+    STRIPE_KEY_CHOICES = (("arrkom", "arrkom"), ("prokom", "prokom"), ("trikom", "trikom"), ("fagkom", "fagkom"))
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     """Which model the payment is created for. For attendance events this should be attendance_event(påmelding)."""
@@ -45,15 +36,10 @@ class Payment(models.Model):
     """Object id for the model chosen in content_type."""
     content_object = GenericForeignKey()
     """Helper attribute which points to the object select in object_id"""
-    stripe_key = models.CharField(
-        _('stripe key'),
-        max_length=10,
-        choices=STRIPE_KEY_CHOICES,
-        default="arrkom"
-    )
+    stripe_key = models.CharField(_("stripe key"), max_length=10, choices=STRIPE_KEY_CHOICES, default="arrkom")
     """Which Stripe key to use for payments"""
 
-    payment_type = models.SmallIntegerField(_('type'), choices=TYPE_CHOICES)
+    payment_type = models.SmallIntegerField(_("type"), choices=TYPE_CHOICES)
     """
         Which payment type to use for payments.
         Can be one of the following:
@@ -67,8 +53,9 @@ class Payment(models.Model):
     """Shared deadline for all payments"""
     active = models.BooleanField(default=True)
     """Is payment activated"""
-    delay = models.DurationField(_('utsettelse'), blank=True, null=True,
-                                 help_text='Oppgi utsettelse på formatet "dager timer:min:sek"')
+    delay = models.DurationField(
+        _("utsettelse"), blank=True, null=True, help_text='Oppgi utsettelse på formatet "dager timer:min:sek"'
+    )
     """Duration after user attended which they have to pay."""
 
     # For logging and history
@@ -77,10 +64,7 @@ class Payment(models.Model):
     changed_date = models.DateTimeField(auto_now=True, editable=False)
     """Last changed. Automatically set"""
     last_changed_by = models.ForeignKey(  # Blank and null is temperarly
-        User,
-        editable=False,
-        null=True,
-        on_delete=models.CASCADE
+        User, editable=False, null=True, on_delete=models.CASCADE
     )
     """User who last changed payment. Automatically set"""
 
@@ -112,18 +96,18 @@ class Payment(models.Model):
             return self.content_object.event.title
         if self._is_type(OrderLine):
             order_line: OrderLine = self.content_object
-            return f'{order_line.user} - {order_line.payment_description}'
+            return f"{order_line.user} - {order_line.payment_description}"
         logging.getLogger(__name__).error(
-            f'Trying to get description for payment #{self.pk}, but it\'s not an AttendanceEvent or a '
-            f'Webshop OrderLine.'
+            f"Trying to get description for payment #{self.pk}, but it's not an AttendanceEvent or a "
+            f"Webshop OrderLine."
         )
-        return 'No description'
+        return "No description"
 
     def get_receipt_description(self):
         receipt_description = ""
-        description = [' '] * 30
+        description = [" "] * 30
         temp = self.description()[0:25]
-        description[0:len(temp)+1] = list(temp)
+        description[0 : len(temp) + 1] = list(temp)
         for c in description:
             receipt_description += c
         return receipt_description
@@ -213,8 +197,7 @@ class Payment(models.Model):
         """
 
         if self._is_type(AttendanceEvent):
-            Attendee.objects.get(event=self.content_object,
-                                 user=payment_relation.user).delete()
+            Attendee.objects.get(event=self.content_object, user=payment_relation.user).delete()
 
         if self._is_type(OrderLine):
             order_line: OrderLine = self.content_object
@@ -232,12 +215,12 @@ class Payment(models.Model):
             if attendance_event.event.event_start < timezone.now():
                 return False, _("Dette arrangementet har allerede startet.")
 
-            return True, ''
+            return True, ""
 
         if self._is_type(OrderLine):
-            return False, 'Du kan ikke refundere betalinger i Webshop på dette tidspunktet'
+            return False, "Du kan ikke refundere betalinger i Webshop på dette tidspunktet"
 
-        return False, 'Refund checks not implemented'
+        return False, "Refund checks not implemented"
 
     def prices(self):
         return self.paymentprice_set.all()
@@ -264,24 +247,24 @@ class Payment(models.Model):
 
     def clean_generic_relation(self):
         if not self._is_type(AttendanceEvent) and not self._is_type(OrderLine):
-            raise ValidationError({
-                'content_type': _('Denne typen objekter støttes ikke av betalingssystemet for tiden.'),
-            })
+            raise ValidationError(
+                {"content_type": _("Denne typen objekter støttes ikke av betalingssystemet for tiden.")}
+            )
         else:
             if not self.content_object or not self.content_object.event.is_attendance_event():
-                raise ValidationError(_('Dette arrangementet har ikke påmelding.'))
+                raise ValidationError(_("Dette arrangementet har ikke påmelding."))
 
     def clean(self):
         super().clean()
         self.clean_generic_relation()
 
     class Meta:
-        unique_together = ('content_type', 'object_id')
+        unique_together = ("content_type", "object_id")
 
         verbose_name = _("betaling")
         verbose_name_plural = _("betalinger")
 
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")
 
 
 class PaymentPrice(models.Model):
@@ -298,7 +281,7 @@ class PaymentPrice(models.Model):
     class Meta:
         verbose_name = _("pris")
         verbose_name_plural = _("priser")
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")
 
 
 class PaymentRelation(models.Model):
@@ -321,10 +304,7 @@ class PaymentRelation(models.Model):
     """ID from Stripe payment"""
 
     status = models.CharField(
-        max_length=30,
-        null=False,
-        choices=status.PAYMENT_STATUS_CHOICES,
-        default=status.SUCCEEDED
+        max_length=30, null=False, choices=status.PAYMENT_STATUS_CHOICES, default=status.SUCCEEDED
     )
     """ Status of a Stripe payment """
     payment_intent_secret = models.CharField(max_length=200, null=True, blank=True)
@@ -340,11 +320,7 @@ class PaymentRelation(models.Model):
         return self.payment.description()
 
     def get_items(self):
-        items = [{
-                    'name': self.payment.description(),
-                    'price': self.payment_price.price,
-                    'quantity': 1
-                 }]
+        items = [{"name": self.payment.description(), "price": self.payment_price.price, "quantity": 1}]
         return items
 
     def get_from_mail(self):
@@ -371,8 +347,7 @@ class PaymentRelation(models.Model):
         if not self.unique_id:
             self.unique_id = str(uuid.uuid4())
         super(PaymentRelation, self).save(*args, **kwargs)
-        receipt = PaymentReceipt(object_id=self.id,
-                                 content_type=ContentType.objects.get_for_model(self))
+        receipt = PaymentReceipt(object_id=self.id, content_type=ContentType.objects.get_for_model(self))
         receipt.save()
 
     def __str__(self):
@@ -381,11 +356,12 @@ class PaymentRelation(models.Model):
     class Meta:
         verbose_name = _("betalingsrelasjon")
         verbose_name_plural = _("betalingsrelasjoner")
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")
 
 
 class PaymentDelay(models.Model):
     """User specific payment deadline"""
+
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     """Payment object"""
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -400,16 +376,17 @@ class PaymentDelay(models.Model):
         return self.payment.description() + " - " + str(self.user)
 
     class Meta:
-        unique_together = ('payment', 'user')
+        unique_together = ("payment", "user")
 
-        verbose_name = _('betalingsutsettelse')
-        verbose_name_plural = _('betalingsutsettelser')
+        verbose_name = _("betalingsutsettelse")
+        verbose_name_plural = _("betalingsutsettelser")
 
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")
 
 
 class PaymentTransaction(models.Model):
     """Transaction for a user"""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     """User object"""
     amount = models.IntegerField(null=True, blank=True)
@@ -419,10 +396,7 @@ class PaymentTransaction(models.Model):
     datetime = models.DateTimeField(auto_now=True)
     """Transaction creation datetime. Automatically generated."""
     status = models.CharField(
-        max_length=30,
-        null=False,
-        choices=status.PAYMENT_STATUS_CHOICES,
-        default=status.SUCCEEDED
+        max_length=30, null=False, choices=status.PAYMENT_STATUS_CHOICES, default=status.SUCCEEDED
     )
     """ Status of a Stripe payment """
     stripe_id = models.CharField(max_length=128, null=True, blank=True)
@@ -440,11 +414,7 @@ class PaymentTransaction(models.Model):
         return "saldoinnskudd på online.ntnu.no"
 
     def get_items(self):
-        items = [{
-                'name': "Påfyll av saldo",
-                'price': self.amount,
-                'quantity': 1
-            }]
+        items = [{"name": "Påfyll av saldo", "price": self.amount, "quantity": 1}]
         return items
 
     def get_from_mail(self):
@@ -458,19 +428,19 @@ class PaymentTransaction(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        receipt = PaymentReceipt(object_id=self.id,
-                                 content_type=ContentType.objects.get_for_model(self))
+        receipt = PaymentReceipt(object_id=self.id, content_type=ContentType.objects.get_for_model(self))
         receipt.save()
 
     class Meta:
-        ordering = ['-datetime']
-        verbose_name = _('transaksjon')
-        verbose_name_plural = _('transaksjoner')
-        default_permissions = ('add', 'change', 'delete')
+        ordering = ["-datetime"]
+        verbose_name = _("transaksjon")
+        verbose_name_plural = _("transaksjoner")
+        default_permissions = ("add", "change", "delete")
 
 
 class PaymentReceipt(models.Model):
     """Transaction receipt"""
+
     receipt_id = models.UUIDField(default=uuid.uuid4)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     """Which model the receipt is created for"""
@@ -488,8 +458,9 @@ class PaymentReceipt(models.Model):
         self.from_mail = transaction.get_from_mail()
         self.to_mail = [transaction.get_to_mail()]
 
-        self._send_receipt(self.timestamp, self.subject, self.description, self.receipt_id,
-                           self.items, self.to_mail, self.from_mail)
+        self._send_receipt(
+            self.timestamp, self.subject, self.description, self.receipt_id, self.items, self.to_mail, self.from_mail
+        )
         super().save(*args, **kwargs)
 
     def _is_type(self, model_type):
@@ -505,25 +476,21 @@ class PaymentReceipt(models.Model):
         receipt_items = []
         total_amount = 0
         for item in items:
-            receipt_items.append({
-                    'amount': item['price'],
-                    'description': item['name'],
-                    'quantity': item['quantity']
-                    })
-            total_amount += item['price'] * item['quantity']
+            receipt_items.append({"amount": item["price"], "description": item["name"], "quantity": item["quantity"]})
+            total_amount += item["price"] * item["quantity"]
 
         context = {
-            'payment_date': payment_date,
-            'description': description,
-            'payment_id': payment_id,
-            'items': receipt_items,
-            'total_amount': total_amount,
-            'to_mail': to_mail,
-            'from_mail': from_mail
+            "payment_date": payment_date,
+            "description": description,
+            "payment_id": payment_id,
+            "items": receipt_items,
+            "total_amount": total_amount,
+            "to_mail": to_mail,
+            "from_mail": from_mail,
         }
 
-        email_message = render_to_string('payment/email/confirmation_mail.txt', context)
+        email_message = render_to_string("payment/email/confirmation_mail.txt", context)
         send_mail(subject, email_message, from_mail, to_mail)
 
     class Meta:
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")

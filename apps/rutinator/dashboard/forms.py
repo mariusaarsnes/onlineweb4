@@ -4,9 +4,6 @@ from apps.rutinator.models import Task
 
 
 class NewTaskForm(forms.ModelForm):
-
     class Meta:
         model = Task
-        fields = (
-            'title', 'description', 'deadline', 'group'
-        )
+        fields = ("title", "description", "deadline", "group")

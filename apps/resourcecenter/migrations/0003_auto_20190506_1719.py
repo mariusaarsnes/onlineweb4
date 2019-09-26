@@ -5,13 +5,8 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('resourcecenter', '0002_auto_20170920_2328'),
-    ]
+    dependencies = [("resourcecenter", "0002_auto_20170920_2328")]
 
     operations = [
-        migrations.AlterModelOptions(
-            name='resource',
-            options={'default_permissions': ('add', 'change', 'delete')},
-        ),
+        migrations.AlterModelOptions(name="resource", options={"default_permissions": ("add", "change", "delete")})
     ]

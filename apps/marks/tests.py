@@ -10,17 +10,16 @@ from apps.marks.models import Mark, MarkUser, _get_with_duration_and_vacation
 
 
 class MarksTest(TestCase):
-
     def setUp(self):
         self.logger = logging.getLogger(__name__)
         self.user = G(User)
         self.mark = G(Mark, title="Testprikk", added_date=timezone.now().date())
         self.userentry = G(MarkUser, user=self.user, mark=self.mark)
 
-# Rewrite to check
-#    def testMarksActive(self):
-#        self.logger.debug("Testing if Mark is active")
-#        self.assertTrue(self.mark.is_active)
+    # Rewrite to check
+    #    def testMarksActive(self):
+    #        self.logger.debug("Testing if Mark is active")
+    #        self.assertTrue(self.mark.is_active)
 
     def testMarkUnicode(self):
         self.logger.debug("Testing Mark unicode with dynamic fixtures")

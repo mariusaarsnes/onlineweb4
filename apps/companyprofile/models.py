@@ -7,7 +7,7 @@ from apps.gallery.models import ResponsiveImage
 class Company(models.Model):
 
     IMAGE_FOLDER = "images/companies"
-    IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.gif', '.png', '.tif', '.tiff']
+    IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".gif", ".png", ".tif", ".tiff"]
 
     name = models.CharField(_("bedriftsnavn"), max_length=100)
     short_description = models.TextField(_("kort beskrivelse"))
@@ -22,13 +22,12 @@ class Company(models.Model):
 
     def images(self):
         from apps.companyprofile.utils import find_image_versions
+
         return find_image_versions(self)
 
     class Meta:
         verbose_name = _("Bedrift")
         verbose_name_plural = _("Bedrifter")
-        permissions = (
-            ('view_company', 'View Company'),
-        )
-        ordering = ('name',)
-        default_permissions = ('add', 'change', 'delete')
+        permissions = (("view_company", "View Company"),)
+        ordering = ("name",)
+        default_permissions = ("add", "change", "delete")

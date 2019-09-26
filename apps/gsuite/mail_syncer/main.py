@@ -2,13 +2,16 @@ import logging
 
 from django.conf import settings
 
-from apps.gsuite.mail_syncer.utils import (get_excess_groups_for_user, get_excess_users_in_g_suite,
-                                           get_g_suite_users_for_group,
-                                           get_missing_g_suite_group_names_for_user,
-                                           get_missing_ow4_users_for_g_suite,
-                                           get_ow4_users_for_group,
-                                           insert_ow4_user_into_g_suite_group,
-                                           remove_g_suite_user_from_group)
+from apps.gsuite.mail_syncer.utils import (
+    get_excess_groups_for_user,
+    get_excess_users_in_g_suite,
+    get_g_suite_users_for_group,
+    get_missing_g_suite_group_names_for_user,
+    get_missing_ow4_users_for_g_suite,
+    get_ow4_users_for_group,
+    insert_ow4_user_into_g_suite_group,
+    remove_g_suite_user_from_group,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +40,16 @@ def remove_excess_g_suite_users(domain, group_name, g_suite_excess_users, suppre
     :param g_suite_excess_users: A list of the excess users to be removed from said group.
     :type g_suite_excess_users: list
     """
-    logger.info("Cleaning G Suite group '{group}'.".format(group=group_name),
-                extra={'group': group_name, 'excess_users': g_suite_excess_users})
+    logger.info(
+        "Cleaning G Suite group '{group}'.".format(group=group_name),
+        extra={"group": group_name, "excess_users": g_suite_excess_users},
+    )
 
     for excess_user in g_suite_excess_users:
-        resp = remove_g_suite_user_from_group(domain, group_name, excess_user,
-                                              suppress_http_errors=suppress_http_errors)
-        logger.debug('Response from cleaning {group_name}: {resp}'.format(group_name=group_name, resp=resp))
+        resp = remove_g_suite_user_from_group(
+            domain, group_name, excess_user, suppress_http_errors=suppress_http_errors
+        )
+        logger.debug("Response from cleaning {group_name}: {resp}".format(group_name=group_name, resp=resp))
 
 
 def insert_ow4_user_into_groups(domain, user, group_names, suppress_http_errors=False):
@@ -60,8 +66,10 @@ def insert_ow4_user_into_groups(domain, user, group_names, suppress_http_errors=
     """
     groups = ["{group}@{domain}".format(group=group_name, domain=domain) for group_name in group_names]
     if groups:
-        logger.info('Inserting {user} into some new G Suite groups.'.format(user=user),
-                    extra={'new_groups': group_names, 'user': user})
+        logger.info(
+            "Inserting {user} into some new G Suite groups.".format(user=user),
+            extra={"new_groups": group_names, "user": user},
+        )
     for group in groups:
         insert_ow4_user_into_g_suite_group(domain, group, user, suppress_http_errors=suppress_http_errors)
 
@@ -78,8 +86,10 @@ def cleanup_groups_for_user(domain, user, suppress_http_errors=False):
     """
     excess_groups = get_excess_groups_for_user(domain, user)
     if excess_groups:
-        logger.debug('Removing "{user}" from some G Suite groups.'.format(user=user),
-                     extra={'user': user, 'excess_groups': excess_groups})
+        logger.debug(
+            'Removing "{user}" from some G Suite groups.'.format(user=user),
+            extra={"user": user, "excess_groups": excess_groups},
+        )
     for group in excess_groups:
         remove_g_suite_user_from_group(domain, group, user.online_mail, suppress_http_errors=suppress_http_errors)
 
@@ -95,8 +105,12 @@ def update_g_suite_user(domain, ow4_user, suppress_http_errors=False):
     :type suppress_http_errors: bool
     """
     cleanup_groups_for_user(domain, ow4_user, suppress_http_errors=suppress_http_errors)
-    insert_ow4_user_into_groups(domain, ow4_user, get_missing_g_suite_group_names_for_user(domain, ow4_user),
-                                suppress_http_errors=suppress_http_errors)
+    insert_ow4_user_into_groups(
+        domain,
+        ow4_user,
+        get_missing_g_suite_group_names_for_user(domain, ow4_user),
+        suppress_http_errors=suppress_http_errors,
+    )
 
 
 def update_g_suite_group(domain, group_name, suppress_http_errors=False):
@@ -110,9 +124,10 @@ def update_g_suite_group(domain, group_name, suppress_http_errors=False):
     :type suppress_http_errors: bool
     """
 
-    if group_name.lower() not in settings.OW4_GSUITE_SYNC.get('GROUPS', {}).keys():
-        logger.debug('Not running group syncer for group {} - group syncing not enabled for this group'
-                     .format(group_name))
+    if group_name.lower() not in settings.OW4_GSUITE_SYNC.get("GROUPS", {}).keys():
+        logger.debug(
+            "Not running group syncer for group {} - group syncing not enabled for this group".format(group_name)
+        )
         return
 
     g_suite_users = get_g_suite_users_for_group(domain, group_name, suppress_http_errors=suppress_http_errors)

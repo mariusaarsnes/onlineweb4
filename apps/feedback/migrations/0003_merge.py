@@ -6,10 +6,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('feedback', '0002_auto_20150429_1759'),
-        ('feedback', '0002_auto_20150623_2055'),
-    ]
+    dependencies = [("feedback", "0002_auto_20150429_1759"), ("feedback", "0002_auto_20150623_2055")]
 
-    operations = [
-    ]
+    operations = []

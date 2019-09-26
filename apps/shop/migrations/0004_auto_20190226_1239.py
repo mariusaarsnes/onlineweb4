@@ -6,14 +6,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('shop', '0003_magictoken'),
-    ]
+    dependencies = [("shop", "0003_magictoken")]
 
     operations = [
         migrations.AlterField(
-            model_name='order',
-            name='quantity',
+            model_name="order",
+            name="quantity",
             field=models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1)]),
-        ),
+        )
     ]

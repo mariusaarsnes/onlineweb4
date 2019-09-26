@@ -21,14 +21,8 @@ def render_json(data=None, error=None, status=200):
             status = 400
 
         if error is None:
-            error = 'Too few arguments to render json'
+            error = "Too few arguments to render json"
 
-        data = {
-            'error': error
-        }
+        data = {"error": error}
 
-    return HttpResponse(
-        json.dumps(data, cls=JsonHelper),
-        content_type="application/json",
-        status=status
-    )
+    return HttpResponse(json.dumps(data, cls=JsonHelper), content_type="application/json", status=status)

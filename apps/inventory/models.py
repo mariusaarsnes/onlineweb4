@@ -18,10 +18,8 @@ class ItemCategory(models.Model):
     class Meta:
         verbose_name = _("Kategori")
         verbose_name_plural = _("Kategorier")
-        permissions = (
-            ("view_itemcategory", "View Item Category"),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        permissions = (("view_itemcategory", "View Item Category"),)
+        default_permissions = ("add", "change", "delete")
 
 
 class Item(models.Model):
@@ -36,7 +34,7 @@ class Item(models.Model):
         related_name="category",
         null=True,
         blank=True,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     image = models.ForeignKey(ResponsiveImage, null=True, blank=True, default=None, on_delete=models.CASCADE)
     low_stock_treshold = models.IntegerField("Grense for email om lav beholdning", default=10)
@@ -97,16 +95,13 @@ class Item(models.Model):
 
         # Send one notification when the stock goes to or below 10
         if self.total_amount <= self.low_stock_treshold and self.total_amount + amount > self.low_stock_treshold:
-            message = "Det er kun " + str(self.total_amount) + " igjen av " + str(self.name) + \
-                      " på kontoret.\n\n" \
-                      "Dette er en automatisk generert melding og antallet kan være noe feil."
+            message = (
+                "Det er kun " + str(self.total_amount) + " igjen av " + str(self.name) + " på kontoret.\n\n"
+                "Dette er en automatisk generert melding og antallet kan være noe feil."
+            )
 
             EmailMessage(
-                "[Nibble] Lav stock på " + self.name,
-                str(message),
-                "online@online.ntnu.no",
-                [],
-                [settings.EMAIL_TRIKOM]
+                "[Nibble] Lav stock på " + self.name, str(message), "online@online.ntnu.no", [], [settings.EMAIL_TRIKOM]
             ).send()
 
     def __str__(self):
@@ -115,10 +110,8 @@ class Item(models.Model):
     class Meta:
         verbose_name = _("Vare")
         verbose_name_plural = _("Varer")
-        permissions = (
-            ("view_item", "View Inventory Item"),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        permissions = (("view_item", "View Inventory Item"),)
+        default_permissions = ("add", "change", "delete")
 
 
 class Batch(models.Model):
@@ -131,4 +124,4 @@ class Batch(models.Model):
     class Meta:
         verbose_name = _("Batch")
         verbose_name_plural = _("Batches")
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")

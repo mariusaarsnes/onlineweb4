@@ -15,6 +15,7 @@ def create_thumbnail(instance):
         # Fixes an annoying Exception in logs, not really needed
         # http://stackoverflow.com/questions/13193278/ {
         import threading
+
         threading._DummyThread._Thread__stop = lambda x: 42
         # }
 
@@ -23,7 +24,7 @@ def create_thumbnail(instance):
         except (OSError, CalledProcessError) as e:
             logger.debug("ERROR: {0}".format(e))
 
-        logger.debug('Thumbnail created, and is located at: %s' % instance.thumbnail)
+        logger.debug("Thumbnail created, and is located at: %s" % instance.thumbnail)
 
     else:
-        logger.debug('Thumbnail already exists, and is located at: %s' % instance.thumbnail)
+        logger.debug("Thumbnail already exists, and is located at: %s" % instance.thumbnail)

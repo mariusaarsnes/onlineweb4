@@ -12,21 +12,20 @@ git_domain = "https://api.github.com"
 
 
 class UpdateRepositories(Task):
-
     @staticmethod
     def run():
         # Load new data
         fresh = UpdateRepositories.get_git_repositories()
-        localtz = tz('Europe/Oslo')
+        localtz = tz("Europe/Oslo")
         for repo in fresh:
             fresh_repo = Repository(
-                id=int(repo['id']),
-                name=repo['name'],
-                description=repo['description'],
-                updated_at=localtz.localize(timezone.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")),
-                url=repo['url'],
-                public_url=repo['html_url'],
-                issues=repo['open_issues_count']
+                id=int(repo["id"]),
+                name=repo["name"],
+                description=repo["description"],
+                updated_at=localtz.localize(timezone.datetime.strptime(repo["updated_at"], "%Y-%m-%dT%H:%M:%SZ")),
+                url=repo["url"],
+                public_url=repo["html_url"],
+                issues=repo["open_issues_count"],
             )
 
             # If repository exists, only update data
@@ -64,9 +63,7 @@ class UpdateRepositories(Task):
                 stored_language.save()
             else:
                 new_language = RepositoryLanguage(
-                    type=language,
-                    size=(int(repo_languages[language])),
-                    repository=stored_repo
+                    type=language, size=(int(repo_languages[language])), repository=stored_repo
                 )
                 new_language.save()
 
@@ -81,17 +78,13 @@ class UpdateRepositories(Task):
                 updated_at=new_repo.updated_at,
                 url=new_repo.url,
                 public_url=new_repo.public_url,
-                issues=new_repo.issues
+                issues=new_repo.issues,
             )
             new_repo.save()
 
             # Add repository languages
             for language in new_languages:
-                new_language = RepositoryLanguage(
-                    type=language,
-                    size=int(new_languages[language]),
-                    repository=new_repo
-                )
+                new_language = RepositoryLanguage(type=language, size=int(new_languages[language]), repository=new_repo)
                 new_language.save()
 
     @staticmethod

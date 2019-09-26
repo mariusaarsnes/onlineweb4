@@ -7,10 +7,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('authentication', '0018_auto_20160224_2050'),
-        ('authentication', '0018_merge'),
-    ]
+    dependencies = [("authentication", "0018_auto_20160224_2050"), ("authentication", "0018_merge")]
 
-    operations = [
-    ]
+    operations = []

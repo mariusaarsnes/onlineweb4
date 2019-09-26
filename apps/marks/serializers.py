@@ -10,15 +10,7 @@ class MarkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mark
-        fields = (
-            'title',
-            'added_date',
-            'last_changed_date',
-            'description',
-            'category',
-            'given_by',
-            'last_changed_by',
-        )
+        fields = ("title", "added_date", "last_changed_date", "description", "category", "given_by", "last_changed_by")
 
 
 class MarkUserSerializer(serializers.ModelSerializer):
@@ -26,21 +18,10 @@ class MarkUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MarkUser
-        fields = (
-            'expiration_date',
-            'mark'
-        )
+        fields = ("expiration_date", "mark")
 
 
 class SuspensionSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Suspension
-        fields = (
-            'title',
-            'description',
-            'active',
-            'added_date',
-            'expiration_date',
-            'payment_id',
-        )
+        fields = ("title", "description", "active", "added_date", "expiration_date", "payment_id")

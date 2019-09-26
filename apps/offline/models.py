@@ -14,8 +14,8 @@ IMAGE_FOLDER = "images/offline"
 class ProxyChunk(Chunk):
     class Meta:
         proxy = True
-        verbose_name = 'Informasjonstekst'
-        verbose_name_plural = 'Informasjonstekster'
+        verbose_name = "Informasjonstekst"
+        verbose_name_plural = "Informasjonstekster"
 
 
 class Issue(models.Model):
@@ -37,7 +37,7 @@ class Issue(models.Model):
             9: "September",
             10: "Oktober",
             11: "November",
-            12: "Desember"
+            12: "Desember",
         }
         return month[self.release_date.month]
 
@@ -53,7 +53,7 @@ class Issue(models.Model):
 
     @property
     def thumbnail(self):
-        thumb = self.url + '.thumb.png'
+        thumb = self.url + ".thumb.png"
         return thumb
 
     @property
@@ -61,10 +61,8 @@ class Issue(models.Model):
         return path.exists(self.thumbnail)
 
     class Meta:
-        verbose_name = 'Utgivelse'
-        verbose_name_plural = 'Utgivelser'
-        ordering = ['-release_date']
-        permissions = (
-            ('view_issue', 'View Issue'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        verbose_name = "Utgivelse"
+        verbose_name_plural = "Utgivelser"
+        ordering = ["-release_date"]
+        permissions = (("view_issue", "View Issue"),)
+        default_permissions = ("add", "change", "delete")

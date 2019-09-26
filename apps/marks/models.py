@@ -18,14 +18,13 @@ WINTER = ((12, 1), (1, 15))
 
 def get_expiration_date(user):
     if user:
-        marks = MarkUser.objects.filter(user=user).order_by('-expiration_date')
+        marks = MarkUser.objects.filter(user=user).order_by("-expiration_date")
         if marks:
             return marks[0].expiration_date
     return None
 
 
 class MarksManager(models.Manager):
-
     @staticmethod
     def all_active():
         return Mark.objects.filter(given_to__expiration_date__gt=timezone.now().date())
@@ -59,7 +58,7 @@ class Mark(models.Model):
         editable=False,
         null=True,
         blank=True,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     last_changed_date = models.DateTimeField(_("sist redigert"), auto_now=True, editable=False)
     last_changed_by = models.ForeignKey(
@@ -69,7 +68,7 @@ class Mark(models.Model):
         editable=False,
         null=True,
         blank=False,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     description = models.CharField(
         _("beskrivelse"),
@@ -77,7 +76,7 @@ class Mark(models.Model):
         help_text=_(
             "Hvis dette feltet etterlates blankt vil det fylles med en standard grunn for typen prikk som er valgt."
         ),
-        blank=True
+        blank=True,
     )
     category = models.SmallIntegerField(_("kategori"), choices=CATEGORY_CHOICES, default=0)
 
@@ -102,16 +101,15 @@ class Mark(models.Model):
     class Meta:
         verbose_name = _("Prikk")
         verbose_name_plural = _("Prikker")
-        permissions = (
-            ('view_mark', 'View Mark'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        permissions = (("view_mark", "View Mark"),)
+        default_permissions = ("add", "change", "delete")
 
 
 class MarkUser(models.Model):
     """
     One entry for a user that has received a mark.
     """
+
     mark = models.ForeignKey(Mark, related_name="given_to", on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -135,11 +133,9 @@ class MarkUser(models.Model):
 
     class Meta:
         unique_together = ("user", "mark")
-        ordering = ('expiration_date',)
-        permissions = (
-            ('view_userentry', 'View UserEntry'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        ordering = ("expiration_date",)
+        permissions = (("view_userentry", "View UserEntry"),)
+        default_permissions = ("add", "change", "delete")
 
 
 def _fix_mark_history(user):
@@ -155,7 +151,7 @@ def _fix_mark_history(user):
      * a new MarkUser entry is made
      * an existing MarkUser entry is deleted
     """
-    markusers = MarkUser.objects.filter(user=user).order_by('mark__added_date')
+    markusers = MarkUser.objects.filter(user=user).order_by("mark__added_date")
     last_expiry_date = None
     for entry in markusers:
         # If there's a last_expiry date, it means a mark has been processed already.
@@ -210,7 +206,7 @@ def _get_with_duration_and_vacation(added_date=timezone.now()):
 class Suspension(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(_('tittel'), max_length=64)
+    title = models.CharField(_("tittel"), max_length=64)
     description = models.CharField(_("beskrivelse"), max_length=255)
     active = models.BooleanField(default=True)
     added_date = models.DateTimeField(auto_now=True, editable=False)
@@ -223,6 +219,6 @@ class Suspension(models.Model):
         return "Suspension: " + str(self.user)
 
     class Meta:
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")
 
     # TODO URL

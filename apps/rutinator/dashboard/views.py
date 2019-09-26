@@ -15,12 +15,12 @@ class TaskListView(DashboardMixin, ListView):
 class CreateTaskView(DashboardMixin, CreateView):
     model = Task
     form_class = NewTaskForm
-    template_name = 'rutinator/dashboard/create.html'
-    success_url = reverse_lazy('dashboard:task_view')
+    template_name = "rutinator/dashboard/create.html"
+    success_url = reverse_lazy("dashboard:task_view")
 
 
 class EditTaskView(DashboardMixin, UpdateView):
     model = Task
     form_class = NewTaskForm
-    template_name = 'rutinator/dashboard/edit.html'
-    success_url = reverse_lazy('dashboard:task_view')
+    template_name = "rutinator/dashboard/edit.html"
+    success_url = reverse_lazy("dashboard:task_view")

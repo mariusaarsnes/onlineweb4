@@ -2,7 +2,6 @@
 
 
 class Task(object):
-
     @staticmethod
     def run():
         raise NotImplementedError("you must define a run() method for your task")

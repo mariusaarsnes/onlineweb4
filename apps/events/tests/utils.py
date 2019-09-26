@@ -26,40 +26,22 @@ def generate_attendance_event(*args, **kwargs):
 
 def generate_payment(event, *args, **kwargs) -> Payment:
     payment = G(
-        Payment,
-        object_id=event.id,
-        content_type=ContentType.objects.get_for_model(AttendanceEvent),
-        *args,
-        **kwargs
+        Payment, object_id=event.id, content_type=ContentType.objects.get_for_model(AttendanceEvent), *args, **kwargs
     )
     G(PaymentPrice, payment=payment)
     return payment
 
 
 def attend_user_to_event(event: Event, user: OnlineUser) -> Attendee:
-    return G(
-        Attendee,
-        event=event.attendance_event,
-        user=user
-    )
+    return G(Attendee, event=event.attendance_event, user=user)
 
 
 def pay_for_event(event: Event, user: OnlineUser, *args, **kwargs) -> PaymentRelation:
-    return G(
-        PaymentRelation,
-        payment=event.attendance_event.payment(),
-        user=user,
-        *args,
-        **kwargs
-    )
+    return G(PaymentRelation, payment=event.attendance_event.payment(), user=user, *args, **kwargs)
 
 
 def add_payment_delay(payment: Payment, user: OnlineUser) -> PaymentDelay:
-    return G(
-        PaymentDelay,
-        payment=payment,
-        user=user
-    )
+    return G(PaymentDelay, payment=payment, user=user)
 
 
 def generate_user(username) -> OnlineUser:
@@ -93,24 +75,24 @@ def add_event_permissions(group):
 
 
 def add_to_arrkom(user):
-    arrkom = Group.objects.get(name__iexact='arrkom')
+    arrkom = Group.objects.get(name__iexact="arrkom")
     add_event_permissions(arrkom)
     return add_to_committee(user, group=arrkom)
 
 
 def add_to_bedkom(user):
-    bedkom = Group.objects.get(name__iexact='bedkom')
+    bedkom = Group.objects.get(name__iexact="bedkom")
     add_event_permissions(bedkom)
     return add_to_committee(user, group=bedkom)
 
 
 def add_to_fagkom(user):
-    fagkom = Group.objects.get(name__iexact='fagkom')
+    fagkom = Group.objects.get(name__iexact="fagkom")
     add_event_permissions(fagkom)
     return add_to_committee(user, group=fagkom)
 
 
 def add_to_trikom(user):
-    trikom = Group.objects.get(name__iexact='trikom')
+    trikom = Group.objects.get(name__iexact="trikom")
     add_event_permissions(trikom)
     return add_to_committee(user, group=trikom)

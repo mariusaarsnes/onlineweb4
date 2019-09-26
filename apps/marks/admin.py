@@ -16,8 +16,8 @@ class MarkUserInline(admin.TabularInline):
 
 class MarkAdmin(VersionAdmin):
     inlines = (MarkUserInline,)
-    list_display = ['__str__', 'category', 'added_date']
-    search_fields = ('title',)
+    list_display = ["__str__", "category", "added_date"]
+    search_fields = ("title",)
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -40,7 +40,7 @@ class MarkAdmin(VersionAdmin):
 class SuspensionAdmin(VersionAdmin):
     model = Suspension
 
-    exclude = ('payment_id',)
+    exclude = ("payment_id",)
 
 
 admin.site.register(Mark, MarkAdmin)

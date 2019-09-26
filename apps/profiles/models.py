@@ -23,7 +23,5 @@ class Privacy(models.Model):
     class Meta:
         verbose_name = _("personvern")
         verbose_name_plural = _("personvern")
-        permissions = (
-            ('view_privacy', 'View Privacy'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        permissions = (("view_privacy", "View Privacy"),)
+        default_permissions = ("add", "change", "delete")

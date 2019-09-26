@@ -7,19 +7,9 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('resourcecenter', '0001_initial'),
-    ]
+    dependencies = [("resourcecenter", "0001_initial")]
 
     operations = [
-        migrations.AlterField(
-            model_name='resource',
-            name='description',
-            field=models.TextField(),
-        ),
-        migrations.AlterField(
-            model_name='resource',
-            name='title',
-            field=models.CharField(max_length=35),
-        ),
+        migrations.AlterField(model_name="resource", name="description", field=models.TextField()),
+        migrations.AlterField(model_name="resource", name="title", field=models.CharField(max_length=35)),
     ]

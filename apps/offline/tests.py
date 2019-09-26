@@ -18,17 +18,16 @@ def create_generic_offline_issue():
 
 
 class OfflineTest(TestCase):
-
     def setUp(self):
         self.logger = logging.getLogger(__name__)
-        self.issue = G(Issue, issue=IMAGE_FOLDER + '/offline-test-pdf.pdf')
+        self.issue = G(Issue, issue=IMAGE_FOLDER + "/offline-test-pdf.pdf")
 
     def _runImagemagick(self):
         try:
-            check_call(['which', 'convert'])
+            check_call(["which", "convert"])
             return True
         except (OSError, CalledProcessError):
-            self.logger.error('Missing dependency imagemagick.')
+            self.logger.error("Missing dependency imagemagick.")
             return False
 
     def testImagemagickExists(self):
@@ -43,7 +42,7 @@ class OfflineTest(TestCase):
 
 class OfflineURLTestCase(TestCase):
     def test_offline_index_empty(self):
-        url = reverse('offline')
+        url = reverse("offline")
 
         response = self.client.get(url)
 
@@ -52,7 +51,7 @@ class OfflineURLTestCase(TestCase):
     def test_offline_index_exists(self):
         create_generic_offline_issue()
 
-        url = reverse('offline')
+        url = reverse("offline")
 
         response = self.client.get(url)
 
@@ -61,7 +60,7 @@ class OfflineURLTestCase(TestCase):
 
 class OfflineAPIURLTestCase(APITestCase):
     def test_offline_list_empty(self):
-        url = reverse('issue-list')
+        url = reverse("issue-list")
 
         response = self.client.get(url)
 
@@ -70,7 +69,7 @@ class OfflineAPIURLTestCase(APITestCase):
     def test_offline_list_exists(self):
         create_generic_offline_issue()
 
-        url = reverse('issue-list')
+        url = reverse("issue-list")
 
         response = self.client.get(url)
 
@@ -78,7 +77,7 @@ class OfflineAPIURLTestCase(APITestCase):
 
     def test_offline_detail(self):
         issue = create_generic_offline_issue()
-        url = reverse('issue-detail', args=(issue.id,))
+        url = reverse("issue-detail", args=(issue.id,))
 
         response = self.client.get(url)
 

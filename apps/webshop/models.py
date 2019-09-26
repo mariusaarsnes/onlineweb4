@@ -13,17 +13,13 @@ from apps.gallery.models import ResponsiveImage
 
 
 class Product(models.Model):
-    category = models.ForeignKey('Category', related_name='products', on_delete=models.CASCADE)
+    category = models.ForeignKey("Category", related_name="products", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
     short = models.CharField(max_length=200)
     description = models.TextField()
     images_csv = models.CharField(
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        default=None,
-        blank=True,
-        null=True,
+        validators=[validate_comma_separated_integer_list], max_length=200, default=None, blank=True, null=True
     )
 
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -75,7 +71,7 @@ class Product(models.Model):
         return stock is None or stock >= quantity
 
     def get_absolute_url(self):
-        return reverse('webshop_product', args=[str(self.slug)])
+        return reverse("webshop_product", args=[str(self.slug)])
 
     def related_products(self):
         """Products in same category excluding this product
@@ -95,7 +91,7 @@ class Product(models.Model):
             QuerySet: QuerySet of images
         """
         if self.images_csv:
-            id_tuple = self.images_csv.split(',')
+            id_tuple = self.images_csv.split(",")
             return ResponsiveImage.objects.filter(id__in=id_tuple)
         return ResponsiveImage.objects.none()
 
@@ -103,12 +99,10 @@ class Product(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Produkt'
-        verbose_name_plural = 'Produkter'
-        permissions = (
-            ('view_product', 'View Product'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        verbose_name = "Produkt"
+        verbose_name_plural = "Produkter"
+        permissions = (("view_product", "View Product"),)
+        default_permissions = ("add", "change", "delete")
 
 
 class Category(models.Model):
@@ -119,21 +113,19 @@ class Category(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('webshop_category', args=[str(self.slug)])
+        return reverse("webshop_category", args=[str(self.slug)])
 
     class Meta:
-        verbose_name = 'Kategori'
-        verbose_name_plural = 'Kategorier'
-        permissions = (
-            ('view_category', 'View Category'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        verbose_name = "Kategori"
+        verbose_name_plural = "Kategorier"
+        permissions = (("view_category", "View Category"),)
+        default_permissions = ("add", "change", "delete")
 
 
 class ProductSize(models.Model):
-    product = models.ForeignKey(Product, related_name='product_sizes', on_delete=models.CASCADE)
-    size = models.CharField('Størrelse', max_length=25)
-    description = models.CharField('Beskrivelse', max_length=50, null=True, blank=True)
+    product = models.ForeignKey(Product, related_name="product_sizes", on_delete=models.CASCADE)
+    size = models.CharField("Størrelse", max_length=25)
+    description = models.CharField("Beskrivelse", max_length=50, null=True, blank=True)
     stock = models.PositiveSmallIntegerField(
         null=True, blank=True, help_text="Antall på lager. Blankt vil si uendelig."
     )
@@ -144,14 +136,14 @@ class ProductSize(models.Model):
         return self.size
 
     class Meta:
-        verbose_name = 'Størrelse'
-        verbose_name_plural = 'Størrelser'
-        default_permissions = ('add', 'change', 'delete')
+        verbose_name = "Størrelse"
+        verbose_name_plural = "Størrelser"
+        default_permissions = ("add", "change", "delete")
 
 
 class Order(models.Model):
-    product = models.ForeignKey('Product', on_delete=models.CASCADE)
-    order_line = models.ForeignKey('OrderLine', related_name='orders', on_delete=models.CASCADE)
+    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    order_line = models.ForeignKey("OrderLine", related_name="orders", on_delete=models.CASCADE)
     # Price of product when paid
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
     # Quantity of products ordered
@@ -180,12 +172,10 @@ class Order(models.Model):
         return "%sx %s" % (self.quantity, self.product)
 
     class Meta:
-        verbose_name = 'Bestilling'
-        verbose_name_plural = 'Bestillinger'
-        permissions = (
-            ('view_order', 'View Order'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        verbose_name = "Bestilling"
+        verbose_name_plural = "Bestillinger"
+        permissions = (("view_order", "View Order"),)
+        default_permissions = ("add", "change", "delete")
 
 
 class OrderLine(models.Model):
@@ -194,7 +184,7 @@ class OrderLine(models.Model):
     paid = models.BooleanField(default=False)
     stripe_id = models.CharField(max_length=50, null=True, blank=True)
     delivered = models.BooleanField(default=False)
-    payments = GenericRelation('payment.Payment')
+    payments = GenericRelation("payment.Payment")
 
     @staticmethod
     def get_current_order_line_for_user(user: User):
@@ -222,7 +212,7 @@ class OrderLine(models.Model):
     def payment_description(self):
         all_orders = self.orders.all()
         order_count = sum(map(lambda order: order.quantity, all_orders))
-        return f'{order_count} varer fra Onlines webshop'
+        return f"{order_count} varer fra Onlines webshop"
 
     def count_orders(self):
         """Total sum of all products
@@ -288,11 +278,7 @@ class OrderLine(models.Model):
         items = []
 
         for order in self.orders.all():
-            item = {
-                'name': order.product.name,
-                'price': int(order.price / order.quantity),
-                'quantity': order.quantity
-            }
+            item = {"name": order.product.name, "price": int(order.price / order.quantity), "quantity": order.quantity}
             items.append(item)
         return items
 
@@ -304,15 +290,13 @@ class OrderLine(models.Model):
 
     def send_receipt(self):
         from apps.payment.models import PaymentReceipt  # Import PaymentReceipt to avoid circular dependency.
-        receipt = PaymentReceipt(object_id=self.id,
-                                 content_type=ContentType.objects.get_for_model(self))
+
+        receipt = PaymentReceipt(object_id=self.id, content_type=ContentType.objects.get_for_model(self))
         receipt.save()
 
     def __str__(self):
         return "Webshop purchase %s by %s" % (self.datetime, self.user)
 
     class Meta:
-        permissions = (
-            ('view_order_line', 'View Order Line'),
-        )
-        default_permissions = ('add', 'change', 'delete')
+        permissions = (("view_order_line", "View Order Line"),)
+        default_permissions = ("add", "change", "delete")

@@ -24,9 +24,7 @@ def sync_order_line_subtotal_to_payment_price(sender, instance: Order, **kwargs)
         """
         if not payment_price:
             PaymentPrice.objects.create(
-                payment=payment,
-                price=order_line.subtotal(),
-                description=order_line.payment_description,
+                payment=payment, price=order_line.subtotal(), description=order_line.payment_description
             )
         else:
             payment_price.price = order_line.subtotal()
@@ -42,9 +40,4 @@ def create_payment_for_order_line(sender, instance: OrderLine, created: bool = F
     """
     if not instance.payment and created:
         """ Webshop Payments are always made to Prokom, and always require immediate payment """
-        Payment.objects.create(
-            stripe_key='prokom',
-            payment_type=1,
-            content_object=instance,
-            active=True,
-        )
+        Payment.objects.create(stripe_key="prokom", payment_type=1, content_object=instance, active=True)

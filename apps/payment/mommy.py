@@ -19,7 +19,6 @@ from apps.payment.models import Payment, PaymentDelay
 
 
 class PaymentReminder(Task):
-
     @staticmethod
     def run():
         logging.basicConfig()
@@ -29,8 +28,7 @@ class PaymentReminder(Task):
 
         # All payments using deadline
         event_payments = Payment.objects.filter(
-            payment_type=2, active=True,
-            content_type=ContentType.objects.get_for_model(AttendanceEvent)
+            payment_type=2, active=True, content_type=ContentType.objects.get_for_model(AttendanceEvent)
         )
 
         today = timezone.now()
@@ -57,12 +55,15 @@ class PaymentReminder(Task):
     def send_reminder_mail(payment):
         subject = _("Betaling: ") + payment.description()
 
-        content = render_to_string('payment/email/reminder_notification.txt', {
-            'payment_description': payment.description(),
-            'payment_deadline': payment.deadline.astimezone(tz('Europe/Oslo')).strftime("%-d %B %Y kl. %H:%M"),
-            'payment_url': settings.BASE_URL + payment.content_object.event.get_absolute_url(),
-            'payment_email': payment.responsible_mail()
-        })
+        content = render_to_string(
+            "payment/email/reminder_notification.txt",
+            {
+                "payment_description": payment.description(),
+                "payment_deadline": payment.deadline.astimezone(tz("Europe/Oslo")).strftime("%-d %B %Y kl. %H:%M"),
+                "payment_url": settings.BASE_URL + payment.content_object.event.get_absolute_url(),
+                "payment_email": payment.responsible_mail(),
+            },
+        )
 
         receivers = PaymentReminder.not_paid_mail_addresses(payment)
 
@@ -72,11 +73,14 @@ class PaymentReminder(Task):
     def send_deadline_passed_mail(payment):
         subject = _("Betalingsfrist utgått: ") + payment.description()
 
-        content = render_to_string('payment/email/reminder_deadline_passed.txt', {
-            'payment_description': payment.description(),
-            'payment_url': settings.BASE_URL + payment.content_object.event.get_absolute_url(),
-            'payment_email': payment.responsible_mail()
-        })
+        content = render_to_string(
+            "payment/email/reminder_deadline_passed.txt",
+            {
+                "payment_description": payment.description(),
+                "payment_url": settings.BASE_URL + payment.content_object.event.get_absolute_url(),
+                "payment_email": payment.responsible_mail(),
+            },
+        )
 
         receivers = PaymentReminder.not_paid_mail_addresses(payment)
 
@@ -96,17 +100,17 @@ class PaymentReminder(Task):
         message += _("\n\nMvh\nLinjeforeningen Online")
 
         logging.getLogger(__name__).warn(
-            'Call to method that does nothing. Should it send a mail? Subject: %s' % subject
+            "Call to method that does nothing. Should it send a mail? Subject: %s" % subject
         )
 
     @staticmethod
     def notify_committee(payment):
         subject = _("Manglende betaling: ") + payment.description()
 
-        content = render_to_string('payment/email/payment_expired_list.txt', {
-            'payment_description': payment.description(),
-            'payment_users': PaymentReminder.not_paid(payment)
-        })
+        content = render_to_string(
+            "payment/email/payment_expired_list.txt",
+            {"payment_description": payment.description(), "payment_users": PaymentReminder.not_paid(payment)},
+        )
 
         receivers = [payment.responsible_mail()]
 
@@ -155,15 +159,12 @@ class PaymentReminder(Task):
             suspension.description = """
             Du har ikke betalt for et arangement du har vært med på. For å fjerne denne suspensjonen må du betale.\n
             Mer informasjon om betalingen finner du her: """
-            suspension.description += str(
-                settings.BASE_URL + payment.content_object.event.get_absolute_url()
-            )
+            suspension.description += str(settings.BASE_URL + payment.content_object.event.get_absolute_url())
 
             suspension.save()
 
 
 class PaymentDelayHandler(Task):
-
     @staticmethod
     def run():
         logging.basicConfig()
@@ -208,9 +209,7 @@ class PaymentDelayHandler(Task):
         suspension.description = """
         Du har ikke betalt for et arangement du har vært med på. For å fjerne denne suspensjonen må du betale.\n
         Mer informasjon om betalingen finner du her: """
-        suspension.description += str(
-            settings.BASE_URL + payment_delay.payment.content_object.event.get_absolute_url()
-        )
+        suspension.description += str(settings.BASE_URL + payment_delay.payment.content_object.event.get_absolute_url())
 
         suspension.save()
 
@@ -220,11 +219,14 @@ class PaymentDelayHandler(Task):
 
         subject = _("Betalingsfrist utgått: ") + payment.description()
 
-        content = render_to_string('payment/email/delay_reminder_deadline_passed.txt', {
-            'payment_description': payment.description(),
-            'payment_unattend_passed': unattend_deadline_passed,
-            'payment_email': payment.responsible_mail()
-        })
+        content = render_to_string(
+            "payment/email/delay_reminder_deadline_passed.txt",
+            {
+                "payment_description": payment.description(),
+                "payment_unattend_passed": unattend_deadline_passed,
+                "payment_email": payment.responsible_mail(),
+            },
+        )
 
         receivers = [payment_delay.user.email]
 
@@ -236,19 +238,22 @@ class PaymentDelayHandler(Task):
 
         subject = _("Husk betaling for ") + payment.description()
 
-        valid_to = payment_delay.valid_to.astimezone(tz('Europe/Oslo'))
+        valid_to = payment_delay.valid_to.astimezone(tz("Europe/Oslo"))
 
         # If event unattend deadline has not passed when payment deadline passes,
         # then the user will be automatically unattended, and given a mark.
         # Else, the unattend deadlline has passed, and the user will not be unattended,
         # but given a mark, and can't attend any other events untill payment is recived.
-        content = render_to_string('payment/email/delay_reminder_notification.txt', {
-            'payment_description': payment.description(),
-            'payment_deadline': valid_to.strftime("%-d. %B %Y kl. %H:%M").encode("utf-8"),
-            'payment_url': settings.BASE_URL + payment.content_object.event.get_absolute_url(),
-            'payment_unattend_passed': unattend_deadline_passed,
-            'payment_email': payment.responsible_mail()
-        })
+        content = render_to_string(
+            "payment/email/delay_reminder_notification.txt",
+            {
+                "payment_description": payment.description(),
+                "payment_deadline": valid_to.strftime("%-d. %B %Y kl. %H:%M").encode("utf-8"),
+                "payment_url": settings.BASE_URL + payment.content_object.event.get_absolute_url(),
+                "payment_unattend_passed": unattend_deadline_passed,
+                "payment_email": payment.responsible_mail(),
+            },
+        )
 
         receivers = [payment_delay.user.email]
 
@@ -272,5 +277,5 @@ class PaymentDelayHandler(Task):
         Attendee.objects.get(event=payment_delay.payment.content_object, user=payment_delay.user).delete()
 
 
-schedule.register(PaymentReminder, day_of_week='mon-sun', hour=7, minute=30)
-schedule.register(PaymentDelayHandler, day_of_week='mon-sun', hour=7, minute=45)
+schedule.register(PaymentReminder, day_of_week="mon-sun", hour=7, minute=30)
+schedule.register(PaymentDelayHandler, day_of_week="mon-sun", hour=7, minute=45)

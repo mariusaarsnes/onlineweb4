@@ -18,4 +18,4 @@ class Task(models.Model):
         return self.title
 
     class Meta:
-        default_permissions = ('add', 'change', 'delete')
+        default_permissions = ("add", "change", "delete")
